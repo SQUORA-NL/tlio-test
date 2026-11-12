@@ -1,0 +1,40 @@
+# A script that loops (forEach) over the lines of an order and prices each one.
+# Test the result of the loop, and the edge cases around it: no lines, one line.
+
+settings:
+  script: ./price-lines.json
+
+cases:
+  - name: every line is priced and the order is totalled
+    input:
+      value:
+        lines:
+          - { sku: A-1, qty: 2, unitPrice: 9.99 }
+          - { sku: B-2, qty: 1, unitPrice: 5 }
+          - { sku: C-3, qty: 3, unitPrice: 1.1 }
+    expect:
+      - { path: "$.lines[0].lineTotal", equals: 19.98 }
+      - { path: "$.lines[1].lineTotal", equals: 5 }
+      - { path: "$.lines[2].lineTotal", equals: 3.3 }
+      - { path: "$.lines[*].lineTotal", count: 3 }
+      - path: $.orderTotal
+        equals: 28.28
+
+  - name: a single line
+    input:
+      value: { lines: [ { sku: A-1, qty: 4, unitPrice: 2.5 } ] }
+    expect:
+      - path: $.orderTotal
+        equals: 10
+
+  # Writing this case found something: the script cannot total an order with no
+  # lines - `sum` has nothing to add up and the run fails. Whether that is a bug
+  # or the intended behaviour is for the script's author to decide. Until then
+  # the case records what happens today, with expectError: the case passes while
+  # the script fails with this message, and starts failing the day someone makes
+  # the script handle an empty order - which is the cue to replace it with real
+  # checks.
+  - name: no lines at all is refused today
+    input:
+      value: { lines: [] }
+    expectError: "argument path not found"

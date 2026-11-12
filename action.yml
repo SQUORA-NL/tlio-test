@@ -1,0 +1,65 @@
+name: tlio-test
+description: Run TLio script tests and fail the build when a script no longer produces the expected output.
+
+inputs:
+  paths:
+    description: Test files or folders to run (space separated).
+    default: "."
+  version:
+    description: tlio-test version to use, e.g. 1.0.0. Defaults to the newest release.
+    default: latest
+  report:
+    description: Where to write the JUnit XML report. Empty for none.
+    default: tlio-test-results.xml
+  filter:
+    description: Only run cases or files whose name contains this text.
+    default: ""
+  allow-empty:
+    description: Do not fail when no tests are found.
+    default: "false"
+  token:
+    description: Only needed if you mirror the releases in a private repository: a token with read access to it.
+    default: ""
+  repository:
+    description: Repository that holds the tlio-test releases.
+    default: SQUORA-NL/tlio-test
+
+runs:
+  using: composite
+  steps:
+    - name: Install tlio-test
+      id: install
+      shell: bash
+      env:
+        TLIO_TEST_REPO: ${{ inputs.repository }}
+        TLIO_TEST_TOKEN: ${{ inputs.token }}
+      run: |
+        dir="$(bash "${{ github.action_path }}/install.sh" "${{ inputs.version }}")"
+        echo "dir=$dir" >> "$GITHUB_OUTPUT"
+
+    - name: Run tests
+      shell: bash
+      env:
+        TLIO_DIR: ${{ steps.install.outputs.dir }}
+        PATHS: ${{ inputs.paths }}
+        REPORT: ${{ inputs.report }}
+        FILTER: ${{ inputs.filter }}
+        ALLOW_EMPTY: ${{ inputs.allow-empty }}
+      run: |
+        set -uo pipefail
+        args=()
+        [ -n "$REPORT" ] && args+=(--report "junit=$REPORT")
+        [ -n "$FILTER" ] && args+=(--filter "$FILTER")
+        [ "$ALLOW_EMPTY" = "true" ] && args+=(--allow-empty)
+        exe="$TLIO_DIR/tlio-test"; [ -f "$exe.exe" ] && exe="$exe.exe"
+        # $PATHS is deliberately unquoted: it is a space separated list.
+        # shellcheck disable=SC2086
+        "$exe" $PATHS "${args[@]}"
+
+    - name: Upload report
+      if: always() && inputs.report != ''
+      uses: actions/upload-artifact@v4
+      with:
+        name: tlio-test-results
+        path: ${{ inputs.report }}
+        if-no-files-found: ignore

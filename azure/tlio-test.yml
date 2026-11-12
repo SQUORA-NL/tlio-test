@@ -1,0 +1,86 @@
+# Azure DevOps step template: run TLio script tests and publish the results.
+#
+# Use it from a pipeline in your own repository:
+#
+#   resources:
+#     repositories:
+#       - repository: tlio
+#         type: github
+#         endpoint: <your GitHub service connection>
+#         name: SQUORA-NL/tlio-test
+#         ref: refs/tags/v1.0.0
+#
+#   steps:
+#     - checkout: self
+#     - template: azure/tlio-test.yml@tlio
+#       parameters:
+#         version: 1.0.0
+#         paths: scripts
+#
+# Needs a bash shell on the agent, which Microsoft-hosted Linux, macOS and
+# Windows agents all have (Git Bash). Nothing else is checked out, so
+# $(Build.SourcesDirectory) stays where your own repository is.
+parameters:
+  # Pin a version. The installer is fetched at the matching tag, so the version
+  # of the installer and of the binary cannot drift apart. "latest" follows main.
+  - name: version
+    type: string
+    default: latest
+  - name: paths
+    type: string
+    default: "."
+  - name: filter
+    type: string
+    default: ""
+  - name: allowEmpty
+    type: boolean
+    default: false
+  # A token with read access to the releases, only if the repository is private.
+  # Pass a secret variable: token: $(TLIO_TEST_TOKEN)
+  - name: token
+    type: string
+    default: ""
+  - name: repository
+    type: string
+    default: SQUORA-NL/tlio-test
+
+steps:
+  - bash: |
+      set -euo pipefail
+      ref="v${VERSION}"; [ "$VERSION" = "latest" ] && ref="main"
+      auth=(); [ -n "${TLIO_TEST_TOKEN:-}" ] && auth=(-H "Authorization: Bearer ${TLIO_TEST_TOKEN}")
+      curl -fsSL "${auth[@]}" -o "$(Agent.TempDirectory)/tlio-test-install.sh" \
+        "https://raw.githubusercontent.com/${TLIO_TEST_REPO}/${ref}/install.sh"
+      dir="$(bash "$(Agent.TempDirectory)/tlio-test-install.sh" "$VERSION")"
+      echo "##vso[task.setvariable variable=TLIO_DIR]$dir"
+    displayName: Install tlio-test
+    env:
+      VERSION: ${{ parameters.version }}
+      TLIO_TEST_REPO: ${{ parameters.repository }}
+      TLIO_TEST_TOKEN: ${{ parameters.token }}
+
+  - bash: |
+      set -uo pipefail
+      args=(--report "junit=$(Agent.TempDirectory)/tlio-test-results.xml")
+      [ -n "$FILTER" ] && args+=(--filter "$FILTER")
+      [ "$ALLOW_EMPTY" = "True" ] && args+=(--allow-empty)
+      exe="$TLIO_DIR/tlio-test"; [ -f "$exe.exe" ] && exe="$exe.exe"
+      cd "$(Build.SourcesDirectory)"
+      # $PATHS is deliberately unquoted: it is a space separated list.
+      # shellcheck disable=SC2086
+      "$exe" $PATHS "${args[@]}"
+    displayName: Run TLio script tests
+    env:
+      PATHS: ${{ parameters.paths }}
+      FILTER: ${{ parameters.filter }}
+      ALLOW_EMPTY: ${{ parameters.allowEmpty }}
+
+  - task: PublishTestResults@2
+    displayName: Publish TLio test results
+    condition: always()
+    inputs:
+      testResultsFormat: JUnit
+      testResultsFiles: tlio-test-results.xml
+      searchFolder: $(Agent.TempDirectory)
+      testRunTitle: TLio script tests
+      failTaskOnFailedTests: false

@@ -1,0 +1,42 @@
+# Copy this file to  azure-pipelines.yml  in your own repository, then create a
+# pipeline from it (Pipelines -> New pipeline -> Existing Azure Pipelines YAML file).
+#
+# Before it can run, create a GitHub service connection (Project settings ->
+# Service connections -> New -> GitHub) and put its name in `endpoint` below.
+# It is needed because the tlio-test template is fetched from GitHub, even though
+# the repository is public.
+#
+# The `trigger` and `pr` sections apply when your repository is on GitHub. If it
+# is in Azure Repos, remove `pr` and add a branch policy instead
+# (Repos -> Branches -> ... -> Branch policies -> Build validation).
+
+trigger:
+  branches:
+    include: [main]
+  paths:
+    include: [scripts]                     # change to the folder that holds your scripts
+
+pr:
+  branches:
+    include: [main]
+  paths:
+    include: [scripts]
+
+resources:
+  repositories:
+    - repository: tlio
+      type: github
+      endpoint: my-github-connection       # the service connection you created
+      name: SQUORA-NL/tlio-test
+      ref: refs/tags/v1.0.0      # pin the version
+
+pool:
+  vmImage: ubuntu-latest
+
+steps:
+  - checkout: self
+
+  - template: azure/tlio-test.yml@tlio
+    parameters:
+      version: 1.0.0                       # keep in step with the tag above
+      paths: scripts

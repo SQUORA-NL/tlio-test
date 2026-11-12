@@ -1,0 +1,18 @@
+# A script that changes the kind of document partway through (convert).
+#
+# It takes JSON and produces XML. The input is therefore JSON, and the checks
+# are written for the document the script ENDS with: XML, so XPath paths.
+
+settings:
+  script: ./to-opdracht.json
+  dataFormat: json
+
+cases:
+  - name: the order becomes an XML opdracht
+    input:
+      value: { order: { id: "7" } }
+    expect:
+      - path: /opdracht/id
+        equals: "7"
+      - path: /opdracht/status
+        equals: new

@@ -1,0 +1,12 @@
+settings:
+  script: ./greet.yaml
+
+cases:
+  - name: greets by name
+    input:
+      value: { name: Ada }
+    expect:
+      - path: $.greeting
+        equals: "Hello, Ada!"
+      - path: $.shout
+        equals: "HELLO, ADA!"

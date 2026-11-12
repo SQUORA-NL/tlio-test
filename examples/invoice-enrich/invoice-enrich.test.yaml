@@ -1,0 +1,55 @@
+# Tests for invoice-enrich.json
+#
+# Run them with:   tlio-test .
+#
+# The script stamps every invoice with an id and a processing time. Those change
+# on every run, so the first case checks only what is stable and the shape of what
+# is not; the second pins the clock and the id source so exact values can be asserted.
+
+settings:
+  script: ./invoice-enrich.json
+
+cases:
+  - name: totals are calculated
+    input:
+      value: { number: INV-1, net: 100 }
+    expect:
+      - path: $.vat
+        equals: 21
+      - path: $.total
+        equals: 121
+      - path: $.currency
+        equals: EUR
+      # Time-based and generated values: check what they look like, not what they are.
+      - path: $.processedAt
+        isType: datetime
+      - path: $.processedAt
+        near: now
+        within: 1m
+      - path: $.id
+        matches: "^[0-9a-f]{8}-([0-9a-f]{4}-){3}[0-9a-f]{12}$"
+
+  - name: values can be pinned to assert them exactly
+    settings:
+      clock: "2026-01-15T10:30:00Z"
+      seed: 42
+    input:
+      file: ./fixtures/invoice-small.json
+    expect:
+      - path: $.processedAt
+        equals: "2026-01-15T10:30:00Z"
+      - path: $.dueDate
+        equals: "2026-02-14"
+      - path: $.total
+        equals: 12.1
+
+  - name: the original fields are left alone
+    input:
+      value: { number: INV-3, net: 50, customer: { name: Acme } }
+    expect:
+      - path: $.number
+        equals: INV-3
+      - path: $.customer
+        equals: { name: Acme }
+      - path: $.customer.name
+        equals: Acme

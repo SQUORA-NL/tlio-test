@@ -1,0 +1,101 @@
+# Every kind of check, on one small script.
+#
+# The script adds a summary to an order. A test lists only the values it cares
+# about; everything else in the output is ignored.
+
+settings:
+  script: ./order-summary.json
+
+cases:
+  - name: exact values (equals)
+    input:
+      value:
+        customer: { name: Acme }
+        lines:
+          - { sku: A-1, price: 10.5 }
+          - { sku: B-2, price: 4.25 }
+    expect:
+      - path: $.itemCount
+        equals: 2
+      - path: $.total
+        equals: 14.75
+      - path: $.customerName
+        equals: ACME
+      # Objects and arrays compare in full; key order does not matter.
+      - path: $.customer
+        equals: { name: Acme }
+      - path: $.channels
+        equals: [web, email]
+
+  - name: does a value exist (exists / absent)
+    input:
+      value:
+        customer: { name: Acme }
+        lines: [ { sku: A-1, price: 1 } ]
+    expect:
+      - path: $.status
+        exists: true
+      - path: $.discount
+        absent: true
+      # Same thing, said the other way round.
+      - path: $.discount
+        exists: false
+
+  - name: how many matches (count) and every match (each)
+    input:
+      value:
+        customer: { name: Acme }
+        lines:
+          - { sku: A-1, price: 10 }
+          - { sku: B-2, price: 20 }
+          - { sku: C-3, price: 30 }
+    expect:
+      # A path that finds several values needs count, or each. Quote paths that
+      # contain [ ] when they are written inside { } on one line.
+      - { path: "$.lines[*].sku", count: 3 }
+      - path: $.lines[*].price
+        isType: number
+        each: true
+      - path: $.lines[*].sku
+        matches: "^[A-Z]-\\d$"
+        each: true
+      # One element by position.
+      - path: $.lines[1].sku
+        equals: B-2
+
+  - name: text and arrays (contains, matches)
+    input:
+      value:
+        customer: { name: Acme Corporation }
+        lines: [ { sku: A-1, price: 1 } ]
+    expect:
+      - path: $.customerName
+        contains: CORPORATION
+      - path: $.customerName
+        matches: "^ACME\\b"
+      - path: $.channels
+        contains: email
+
+  - name: numbers that may differ in the last digits (approx)
+    input:
+      value:
+        customer: { name: Acme }
+        lines:
+          - { sku: A-1, price: 0.1 }
+          - { sku: B-2, price: 0.2 }
+    expect:
+      - path: $.total
+        approx: 0.3
+        tolerance: 0.001
+
+  - name: what kind of value it is (isType)
+    input:
+      value:
+        customer: { name: Acme }
+        lines: [ { sku: A-1, price: 3 } ]
+    expect:
+      - { path: $.itemCount, isType: integer }
+      - { path: $.total, isType: number }
+      - { path: $.status, isType: string }
+      - { path: $.channels, isType: array }
+      - { path: $.customer, isType: object }

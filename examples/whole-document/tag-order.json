@@ -1,0 +1,5 @@
+[
+  { "command": "add", "path": "$.status", "value": "accepted" },
+  { "command": "add", "path": "$.receivedAt", "value": "=datetime()" },
+  { "command": "add", "path": "$.traceId", "value": "=newGuid()" }
+]

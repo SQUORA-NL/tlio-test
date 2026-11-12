@@ -1,0 +1,8 @@
+[
+  { "command": "add", "path": "$.vat", "value": "=round(=multiply($.net, 0.21), 2)" },
+  { "command": "add", "path": "$.total", "value": "=round(=sum($.net, $.vat), 2)" },
+  { "command": "add", "path": "$.currency", "value": "EUR" },
+  { "command": "add", "path": "$.id", "value": "=newGuid()" },
+  { "command": "add", "path": "$.processedAt", "value": "=datetime()" },
+  { "command": "add", "path": "$.dueDate", "value": "=dateAdd(=datetime('yyyy-MM-dd'), 30, 'days')" }
+]

@@ -1,0 +1,5 @@
+[
+  { "command": "add", "path": "$.order.status", "value": "new" },
+  { "command": "convert", "to": "xml" },
+  { "command": "rename", "path": "/order", "name": "opdracht" }
+]

@@ -1,0 +1,10 @@
+[
+  {
+    "command": "forEach",
+    "path": "$.lines",
+    "commands": [
+      { "command": "add", "path": "@.lineTotal", "value": "=round(=multiply(@.qty, @.unitPrice), 2)" }
+    ]
+  },
+  { "command": "add", "path": "$.orderTotal", "value": "=round(=sum($.lines[*].lineTotal), 2)" }
+]

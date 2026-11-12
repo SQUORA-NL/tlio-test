@@ -1,0 +1,5 @@
+[
+  { "command": "set", "path": "$.email", "value": "=tolower(=trim($.email))" },
+  { "command": "set", "path": "$.name", "value": "=trim($.name)" },
+  { "command": "add", "path": "$.domain", "value": "=regexextract($.email, '@(.+)$', 1)" }
+]

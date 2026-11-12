@@ -1,0 +1,16 @@
+# Documents do not have to be JSON: paths are then XPath, and values come back as text.
+settings:
+  script: ./order.json
+  dataFormat: xml
+
+cases:
+  - name: total is doubled and status added
+    input:
+      text: "<order><total>10</total></order>"
+    expect:
+      - path: /order/total
+        equals: 20
+      - path: /order/total
+        isType: number
+      - path: /order/status
+        equals: processed

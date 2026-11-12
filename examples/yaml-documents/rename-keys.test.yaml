@@ -1,0 +1,41 @@
+# The document being transformed is YAML, not JSON.
+#
+# dataFormat: yaml makes the input a YAML document (given as `text:` or `file:`)
+# and the paths in `expect` YAML paths, the same as in the script. The script
+# itself is still a list of commands; only the document changes.
+
+settings:
+  script: ./rename-keys.json
+  dataFormat: yaml
+
+cases:
+  - name: the server section is updated
+    input:
+      text: |
+        server:
+          host: example.org
+          port: 8080
+          debug: true
+    expect:
+      - path: server.port
+        equals: 8443
+      - path: server.tls
+        equals: true
+      - path: server.host
+        equals: example.org
+      - path: server.debug
+        absent: true
+
+  # The whole document, as text. Line endings and trailing spaces are ignored.
+  - name: the whole document
+    input:
+      text: |
+        server:
+          host: example.org
+          port: 8080
+          debug: true
+    expectFull: |
+      server:
+        host: example.org
+        port: 8443
+        tls: true

@@ -1,0 +1,8 @@
+# A script written in YAML. The notation is chosen by the file's extension; the
+# document it transforms is still JSON unless the test file says otherwise.
+- command: add
+  path: $.greeting
+  value: =concat('Hello, ', $.name, '!')
+- command: add
+  path: $.shout
+  value: =toupper($.greeting)

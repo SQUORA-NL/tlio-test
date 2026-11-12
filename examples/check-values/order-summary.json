@@ -1,0 +1,7 @@
+[
+  { "command": "add", "path": "$.itemCount", "value": "=count($.lines)" },
+  { "command": "add", "path": "$.total", "value": "=round(=sum($.lines[*].price), 2)" },
+  { "command": "add", "path": "$.customerName", "value": "=toupper($.customer.name)" },
+  { "command": "add", "path": "$.status", "value": "ready" },
+  { "command": "add", "path": "$.channels", "value": ["web", "email"] }
+]

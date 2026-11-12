@@ -1,0 +1,5 @@
+[
+  { "command": "set", "path": "server.port", "value": 8443 },
+  { "command": "add", "path": "server.tls", "value": true },
+  { "command": "remove", "path": "server.debug" }
+]

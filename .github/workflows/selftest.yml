@@ -1,0 +1,29 @@
+name: Self-test
+
+# Runs the published action against the bundled examples, on Linux, macOS and
+# Windows. If this is green, the action, the installer and the release assets
+# work together for anyone using them.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  action:
+    name: Action on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: ./
+        with:
+          paths: examples
+          version: latest

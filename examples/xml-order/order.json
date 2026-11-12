@@ -1,0 +1,4 @@
+[
+  { "command": "put", "path": "/order/total", "value": "=multiply(/order/total, 2)" },
+  { "command": "add", "path": "/order/status", "value": "processed" }
+]

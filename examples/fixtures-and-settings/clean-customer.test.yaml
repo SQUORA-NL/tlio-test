@@ -1,0 +1,30 @@
+# Larger inputs live in files next to the test, and settings can be changed for
+# one case without touching the others.
+#
+# Paths in `input.file` are relative to this test file.
+
+settings:
+  script: ./clean-customer.json
+  timeoutMs: 5000          # every case in this file gets 5 seconds
+
+cases:
+  - name: whitespace and capitals are cleaned up
+    description: A realistic customer record, kept in a fixture file.
+    input:
+      file: ./fixtures/messy-customer.json
+    expect:
+      - path: $.name
+        equals: Grace Hopper
+      - path: $.email
+        equals: grace.hopper@navy.example
+      - path: $.domain
+        equals: navy.example
+
+  - name: this case has a tighter limit than the rest
+    settings:
+      timeoutMs: 500       # overrides the file's 5000 for this case only
+    input:
+      value: { name: Ada, email: ADA@Example.org }
+    expect:
+      - path: $.email
+        equals: ada@example.org

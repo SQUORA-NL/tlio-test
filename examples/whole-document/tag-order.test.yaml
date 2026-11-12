@@ -1,0 +1,35 @@
+# Comparing the whole output, and leaving out what changes.
+#
+# expectFull is the designer's own rule: the output must equal the document.
+# The script stamps a time and an id, which differ on every run, so they are
+# listed under `ignore` and removed from both sides before comparing.
+
+settings:
+  script: ./tag-order.json
+  ignore:
+    - $.receivedAt
+    - $.traceId
+
+cases:
+  - name: the order comes back accepted
+    input:
+      value: { number: "PO-17", lines: [ { sku: A-1, qty: 2 } ] }
+    expectFull:
+      number: "PO-17"
+      lines:
+        - { sku: A-1, qty: 2 }
+      status: accepted
+
+  # `unlistedPaths: fail` is the strict version of partial checking: every value
+  # in the output must be covered by a check or by `ignore`, so a new field that
+  # a script starts producing cannot slip through unnoticed.
+  - name: strict - nothing in the output goes unchecked
+    settings:
+      unlistedPaths: fail
+    input:
+      value: { number: "PO-18" }
+    expect:
+      - path: $.number
+        equals: "PO-18"
+      - path: $.status
+        equals: accepted
