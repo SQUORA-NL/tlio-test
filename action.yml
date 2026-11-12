@@ -18,7 +18,7 @@ inputs:
     description: Do not fail when no tests are found.
     default: "false"
   token:
-    description: Only needed if you mirror the releases in a private repository: a token with read access to it.
+    description: A token with read access, only needed if you mirror the releases in a private repository.
     default: ""
   repository:
     description: Repository that holds the tlio-test releases.
